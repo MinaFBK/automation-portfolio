@@ -4,6 +4,7 @@ I build automations that hold up in production — not demos that fall over the 
 
 **Location:** Egypt — open to remote worldwide.
 **Contact:** menafbk@gmail.com · [LinkedIn](https://www.linkedin.com/in/minafbk/)
+**Résumé:** [📄 Download CV (PDF)](./Mina-Bekhit-CV.pdf)
 
 ---
 
