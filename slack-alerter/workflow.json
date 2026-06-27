@@ -1,0 +1,65 @@
+{
+  "name": "Failure Alerts",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        -224
+      ],
+      "id": "eec0e848-748e-4ea4-b5a1-270356eea762",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }} ",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "= 🚨 Workflow failed: {{ $json.workflow.name }}\n  Node: {{ $json.execution.lastNodeExecuted }}\n  Error: {{ $json.execution.error.message }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        -224
+      ],
+      "id": "15a99e1b-a941-4c2e-93d0-a5d0a1bf6c28",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "230bff95-b1f9-456b-bc41-2b7da58937c7",
+  "meta": {
+    "instanceId": "92d0393667de87d2bb73b8c7394c8a91dc835007a6db4e10308d952d41fba00a"
+  },
+  "id": "l1EhXBlSStx7zsfa",
+  "tags": []
+}

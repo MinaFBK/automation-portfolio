@@ -1,0 +1,290 @@
+[
+  {
+    "updatedAt": "2026-06-22T05:46:51.837Z",
+    "createdAt": "2026-06-17T07:48:30.383Z",
+    "id": "dy7LY08lewdgqEIf",
+    "name": "Invoice Extractor",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "formTitle": "Invoice Upload",
+          "formFields": {
+            "values": [
+              {
+                "fieldLabel": "Invoice",
+                "fieldType": "file"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.formTrigger",
+        "typeVersion": 2.5,
+        "position": [
+          0,
+          0
+        ],
+        "id": "c79d7828-d3bf-4858-b794-4744de4c8103",
+        "name": "On form submission",
+        "webhookId": "96baca91-e75c-4c71-9792-935eecfa58db"
+      },
+      {
+        "parameters": {
+          "resource": "document",
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "models/gemini-2.5-flash"
+          },
+          "text": "You are an invoice data extractor. Read the attached document and return ONLY one valid JSON object — no markdown, no code fences, no commentary — with exactly these keys:\n{\"vendor_name\": string, \"invoice_number\": string, \"invoice_date\": \"YYYY-MM-DD\", \"due_date\": \"YYYY-MM-DD or null\", \"currency\": \"3-letter ISO code\", \"line_items\": [{\"description\": string, \"quantity\": number, \"unit_price\": number, \"amount\": number}], \"subtotal\": number, \"tax\": number, \"total\": number}\nRules: Use null for any field you cannot find; never invent values. Numbers must be plain numbers (no currency symbols or thousands separators). Dates as YYYY-MM-DD; if missing or partial, use null. Output the JSON object and nothing else.",
+          "inputType": "binary",
+          "binaryPropertyName": "Invoice",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.2,
+        "position": [
+          208,
+          0
+        ],
+        "id": "36fee51b-df69-492d-8353-2233222d2da3",
+        "name": "Analyze document",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "googlePalmApi": {
+            "id": "NMV0LyJzoksUpJMJ",
+            "name": "Google Gemini(PaLM) Api account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForEachItem",
+          "jsCode": "// Gemini's JSON answer lives at content.parts[0].text for this node\nconst c = $json.content;\nlet raw = (c && c.parts && c.parts[0] && c.parts[0].text) ? c.parts[0].text : ($json.text ?? $json.content ?? '');\nif (typeof raw !== 'string') raw = JSON.stringify(raw);\n\n// Defensive: strip ```json fences / stray prose, keep the outermost {...}\nlet cleaned = raw.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();\nconst a = cleaned.indexOf('{'), b = cleaned.lastIndexOf('}');\nif (a !== -1 && b !== -1) cleaned = cleaned.slice(a, b + 1);\n\nlet data = null, parseError = null;\ntry { data = JSON.parse(cleaned); } catch (e) { parseError = e.message; }\n\n\nconst errors = [];\nif (parseError) {\n  errors.push('JSON parse failed: ' + parseError);\n} else {\n  for (const k of ['vendor_name','invoice_number','subtotal','tax','total'])\n    if (data[k] === undefined || data[k] === null || data[k] === '') errors.push('missing field: ' + k);\n  for (const k of ['subtotal','tax','total'])\n    if (data[k] !== null && typeof data[k] !== 'number') errors.push(k + ' is not a number');\n  if (!Array.isArray(data.line_items)) errors.push('line_items is not an array');\n  if (['subtotal','tax','total'].every(k => typeof data[k] === 'number') &&\n      Math.abs((data.subtotal + data.tax) - data.total) > 0.01)\n    errors.push('totals do not add up: ' + data.subtotal + ' + ' + data.tax + ' != ' + data.total);\n}\nreturn { valid: errors.length === 0, errors, data };"
+        },
+        "id": "ae1d0ad0-dd5e-43db-9cce-2b5be688d798",
+        "name": "Parse & Validate",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          448,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "22dfe9c6-f9ec-422a-913a-355a5810e8b5",
+                "leftValue": "={{ $json.valid }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          656,
+          0
+        ],
+        "id": "9c20acb7-1997-4a12-96a3-879a0521cd54",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO invoices\n  (vendor_name, invoice_number, invoice_date, due_date, currency,\n   subtotal, tax, total, line_items, source_file)\nVALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10)",
+          "options": {
+            "queryReplacement": "={{ [$('Parse & Validate').item.json.data.vendor_name, $('Parse & Validate').item.json.data.invoice_number, $('Parse & Validate').item.json.data.invoice_date, $('Parse & Validate').item.json.data.due_date, $('Parse & Validate').item.json.data.currency, $('Parse & Validate').item.json.data.subtotal, $('Parse & Validate').item.json.data.tax, $('Parse & Validate').item.json.data.total, JSON.stringify($('Parse & Validate').item.json.data.line_items), $('On form submission').item.binary.Invoice.fileName] }}"
+          }
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          864,
+          -96
+        ],
+        "id": "d07e1b44-544d-487e-b4c3-11d87c87e723",
+        "name": "HappyQ",
+        "credentials": {
+          "postgres": {
+            "id": "nOaMXlOXiO7mmWgd",
+            "name": "Invoice DB (Postgres)"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO invoices_review (data, errors, source_file)\nVALUES ($1::jsonb, $2::jsonb, $3)",
+          "options": {
+            "queryReplacement": "={{ [JSON.stringify($('Parse & Validate').item.json.data), JSON.stringify($('Parse & Validate').item.json.errors), $('On form submission').item.binary.Invoice.fileName] }}"
+          }
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          864,
+          96
+        ],
+        "id": "f177cf1a-ea26-492f-95da-31951f0705a2",
+        "name": "SadQ",
+        "credentials": {
+          "postgres": {
+            "id": "nOaMXlOXiO7mmWgd",
+            "name": "Invoice DB (Postgres)"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "text",
+                "value": "={{ $('Parse & Validate').item.json.errors }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1072,
+          96
+        ],
+        "id": "c652368e-e45b-4e94-bba7-408700deb232",
+        "name": "HTTP Request"
+      }
+    ],
+    "connections": {
+      "On form submission": {
+        "main": [
+          [
+            {
+              "node": "Analyze document",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Analyze document": {
+        "main": [
+          [
+            {
+              "node": "Parse & Validate",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse & Validate": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "HappyQ",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "SadQ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "SadQ": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "binaryMode": "separate",
+      "timeSavedMode": "fixed",
+      "errorWorkflow": "l1EhXBlSStx7zsfa",
+      "callerPolicy": "workflowsFromSameOwner",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "4f06fe3a-2cf7-445a-9ef0-2c8c8c0c98df",
+    "activeVersionId": "4f06fe3a-2cf7-445a-9ef0-2c8c8c0c98df",
+    "versionCounter": 110,
+    "triggerCount": 1,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-06-17T07:48:30.383Z",
+        "createdAt": "2026-06-17T07:48:30.383Z",
+        "role": "workflow:owner",
+        "workflowId": "dy7LY08lewdgqEIf",
+        "projectId": "tKQAnBbhO3r8dwQv",
+        "project": {
+          "updatedAt": "2026-05-22T10:15:49.112Z",
+          "createdAt": "2026-05-22T09:01:10.891Z",
+          "id": "tKQAnBbhO3r8dwQv",
+          "name": "Mina FBK <menafbk@gmail.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "6d639673-375b-473b-9511-cf29eb63ae08"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": "Invoices",
+      "description": ""
+    }
+  }
+]
