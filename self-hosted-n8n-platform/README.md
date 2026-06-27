@@ -327,6 +327,5 @@ $0. Runs on existing hardware; Community Edition is free; Google Drive backup us
 ## Files
 
 - The **full deployable config + operator runbook** (`docker-compose.yml`, `.env.example`,
-  `backup.sh`, deploy/restore runbook) lives in a separate **private** repo,
-  `MinaFBK/n8n-Community-Edition` — the sanitized excerpts above show the shape. Kept private because
-  it's the live deployment config; available to walk through on request.
+  `backup.sh`, deploy/restore runbook) is kept private — it's my live deployment config. The
+  sanitized excerpts above show the shape, and I'm happy to walk through the full setup on request.

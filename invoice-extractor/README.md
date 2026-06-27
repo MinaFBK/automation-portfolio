@@ -6,7 +6,7 @@ Gemini reads the uploaded file and returns JSON. The pipeline then refuses to ta
 
 That refusal is the actual point of the project. Getting an LLM to turn a PDF into JSON is a five-minute demo. The useful problem is what you do when it misreads a total or invents a vendor, and that is the part I built around. The schema is invoice-shaped right now; swapping it to receipts, contracts, or forms is a prompt-and-table change, not a rebuild.
 
-**Status:** live and published on my self-hosted n8n instance (see the [platform project](../self-hosted-n8n-platform/) it runs on), reachable over a Cloudflare tunnel. In this folder: the exported workflow (`invoice-extractor.workflow.json`), the schema (`schema.sql`), and my interview notes (`interview-notes.md`).
+**Status:** live and published on my self-hosted n8n instance (see the [platform project](../self-hosted-n8n-platform/) it runs on), reachable over a Cloudflare tunnel. In this folder: the exported workflow (`invoice-extractor.workflow.json`) and the schema (`schema.sql`).
 
 ## Demo
 
