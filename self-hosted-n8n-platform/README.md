@@ -25,10 +25,9 @@ the easy 10%; the operating side — keeping the instance persistent, secret-saf
 recoverable across machines — is the 90% where the real engineering lives, and it's what businesses
 actually pay someone to own.
 
-A junior automation listing I'm targeting asks, almost word for word, to *"install and configure n8n
-self-hosted with authentication and HTTPS, set up credential management and environment variables for
-all APIs."* That is this stack. Most applicants who "know n8n" only know the hosted dashboard — so
-the operating skills below are the edge, not an afterthought.
+Listings for this work ask, almost word for word, to *"install and configure n8n self-hosted with
+authentication and HTTPS, set up credential management and environment variables for all APIs."*
+That is this stack.
 
 ---
 

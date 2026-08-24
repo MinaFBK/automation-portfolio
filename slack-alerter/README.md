@@ -4,7 +4,7 @@ A reusable n8n error-handler workflow. Point any workflow's **Error Workflow** s
 when that workflow fails in production it posts a formatted alert to a Slack `#alerts` channel —
 with the failed workflow's name, the node that broke, and the actual error message.
 
-Built and run end-to-end on my own self-hosted n8n stack (Docker + PostgreSQL, WSL2), **June 2026**.
+Built and run end-to-end on my own self-hosted n8n stack (Docker + PostgreSQL on Linux), **June 2026**.
 
 ---
 

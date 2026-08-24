@@ -1,10 +1,10 @@
-# AI Invoice Extraction Pipeline
+# Invoice Extraction Pipeline
 
 An n8n automation that helps a finance or ops team get invoice data into a database without hand-keying it, and without trusting whatever the AI guessed.
 
-Gemini reads the uploaded file and returns JSON. The pipeline then refuses to take that JSON at face value. Every extraction is validated, and anything that fails a check is sent to a review queue with the reasons attached, instead of being saved as if it were correct.
+Gemini reads the uploaded file and returns JSON. The pipeline then refuses to take that JSON at face value. Every extraction is validated, and anything that fails a check is sent to a review queue with the reasons attached.
 
-That refusal is the actual point of the project. Getting an LLM to turn a PDF into JSON is a five-minute demo. The useful problem is what you do when it misreads a total or invents a vendor, and that is the part I built around. The schema is invoice-shaped right now; swapping it to receipts, contracts, or forms is a prompt-and-table change, not a rebuild.
+That refusal is the point of the project. Getting an LLM to turn a PDF into JSON is a five-minute demo. The useful problem is what you do when it misreads a total or invents a vendor, and that is the part I built around. The schema is invoice-shaped right now; swapping it to receipts, contracts, or forms is a prompt-and-table change, not a rebuild.
 
 **Status:** live and published on my self-hosted n8n instance (see the [platform project](../self-hosted-n8n-platform/) it runs on), reachable over a Cloudflare tunnel. In this folder: the exported workflow (`invoice-extractor.workflow.json`) and the schema (`schema.sql`).
 
@@ -18,13 +18,13 @@ How someone uses it. A plain upload form, no login required, so anyone can drop 
 
 ![The Invoice Upload form](images/form.png)
 
-A rejection in action. A file with no invoice data was caught and posted to Slack with the exact reasons, instead of being saved as if it were real:
+A rejection in action. A file with no invoice data was caught and posted to Slack with the exact reasons:
 
 ![Slack "needs review" alert listing the missing fields](images/slack-review.png)
 
 ## Why I built it
 
-Invoice entry is everywhere, dull, and easy to get wrong, which is exactly why people are throwing AI at it. The trap is that the AI is sometimes confidently wrong and nobody checks. I wanted a piece that demonstrated the checking, not the party trick. It also let me reuse the Slack alerting and self-hosted setup from my first project, so the two assets fit together.
+Invoice entry is everywhere, dull, and easy to get wrong, which is exactly why people are throwing AI at it. The trap is that the AI is sometimes confidently wrong and nobody checks. I wanted a piece that demonstrated the checking. It also let me reuse the Slack alerting and self-hosted setup from my first project, so the two assets fit together.
 
 ## How it works
 
