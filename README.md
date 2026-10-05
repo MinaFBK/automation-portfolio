@@ -4,7 +4,7 @@ I run self-hosted systems and keep them running. The projects below are built on
 demonstrate is the operating side underneath: Docker, PostgreSQL, encrypted secrets, off-site backups
 I have restored from, a migration between hosts, and alerting when something fails.
 
-**Location:** Egypt — open to remote worldwide.
+**Location:** Alexandria, Egypt. Open to relocating to Cairo.
 **Contact:** menafbk@gmail.com · [LinkedIn](https://www.linkedin.com/in/minafbk/)
 
 ---
